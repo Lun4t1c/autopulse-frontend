@@ -150,7 +150,14 @@ function buildQuery(filters: OfferFilters): Filter<Document> {
     query.price = price;
   }
 
-  const year = numberFilter(filters.minYear, filters.maxYear);
+  const year =
+  filters.minYear != null || filters.maxYear != null
+    ? {
+        ...(filters.minYear != null ? { $gte: String(filters.minYear) } : {}),
+        ...(filters.maxYear != null ? { $lte: String(filters.maxYear) } : {}),
+      }
+    : undefined;
+
   if (year) {
     query.year = year;
   }
@@ -251,8 +258,7 @@ export async function getOffers(filters: OfferFilters): Promise<OfferQueryResult
 
     const [offers, total, statsRows, options] = await Promise.all([
       collection
-        //.find(query)
-        .find()
+        .find(query)
         .sort(sort)
         .skip((page - 1) * PAGE_SIZE)
         .limit(PAGE_SIZE)

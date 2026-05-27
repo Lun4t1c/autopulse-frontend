@@ -21,8 +21,11 @@ function first(value: string | string[] | undefined) {
 }
 
 function numberParam(value: string | string[] | undefined) {
-  const parsed = Number(first(value));
-  return Number.isFinite(parsed) ? parsed : undefined;
+  const v = first(value);
+  if (!v) return undefined;
+
+  const parsed = Number(v);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 function formatMoney(value: number | null, currency = "PLN") {
@@ -80,7 +83,9 @@ export default async function Home({ searchParams }: PageProps) {
     sort: sortOptions.some((item) => item.value === sort) ? sort : "newest",
     page: numberParam(params.page),
   };
-  const result = await getOffers(filters);
+  const clean = (obj: any) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null && v !== ""));
+  const result = await getOffers(clean(filters));
   const currency = result.offers.find((offer) => offer.currency)?.currency ?? "PLN";
 
   return (
