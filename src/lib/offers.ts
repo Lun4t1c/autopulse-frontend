@@ -40,6 +40,8 @@ export type OfferFilters = {
   page?: number;
 };
 
+export type OfferScope = "today" | "all";
+
 export type OfferSort =
   | "newest"
   | "price_asc"
@@ -68,6 +70,7 @@ export type OfferStats = {
 export type OfferQueryResult = {
   configured: boolean;
   collectionLabel: string;
+  scope: OfferScope;
   offers: Offer[];
   options: OptionGroup;
   stats: OfferStats;
@@ -126,43 +129,69 @@ function numberFilter(min?: number, max?: number) {
   return Object.keys(filter).length ? filter : undefined;
 }
 
-function buildQuery(filters: OfferFilters): Filter<Document> {
-  const query: Filter<Document> = {};
+function getTodayFilter() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(start);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return {
+    first_seen: { $gte: start, $lt: tomorrow },
+  };
+}
+
+function buildQuery(filters: OfferFilters, scope: OfferScope): Filter<Document> {
+  const conditions: Filter<Document>[] = [];
 
   if (filters.q) {
     const escaped = filters.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    query.$or = [
-      { title: { $regex: escaped, $options: "i" } },
-      { brand: { $regex: escaped, $options: "i" } },
-      { model: { $regex: escaped, $options: "i" } },
-      { offer_id: { $regex: escaped, $options: "i" } },
-    ];
+    conditions.push({
+      $or: [
+        { title: { $regex: escaped, $options: "i" } },
+        { brand: { $regex: escaped, $options: "i" } },
+        { model: { $regex: escaped, $options: "i" } },
+        { offer_id: { $regex: escaped, $options: "i" } },
+      ],
+    });
   }
 
   for (const field of ["brand", "model", "fuel_type", "gearbox", "body"] as const) {
     if (filters[field]) {
-      query[field] = filters[field];
+      conditions.push({ [field]: filters[field] });
     }
   }
 
   const price = numberFilter(filters.minPrice, filters.maxPrice);
   if (price) {
-    query.price = price;
+    conditions.push({ price });
   }
 
   const year =
-  filters.minYear != null || filters.maxYear != null
-    ? {
-        ...(filters.minYear != null ? { $gte: String(filters.minYear) } : {}),
-        ...(filters.maxYear != null ? { $lte: String(filters.maxYear) } : {}),
-      }
-    : undefined;
+    filters.minYear != null || filters.maxYear != null
+      ? {
+          ...(filters.minYear != null ? { $gte: String(filters.minYear) } : {}),
+          ...(filters.maxYear != null ? { $lte: String(filters.maxYear) } : {}),
+        }
+      : undefined;
 
   if (year) {
-    query.year = year;
+    conditions.push({ year });
   }
 
-  return query;
+  if (scope === "today") {
+    conditions.push(getTodayFilter());
+  }
+
+  if (conditions.length === 0) {
+    return {};
+  }
+
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  return { $and: conditions };
 }
 
 function toNumber(value: unknown): number | null {
@@ -225,7 +254,7 @@ async function getDistinctOptions(collection: Collection<Document>) {
   };
 }
 
-export async function getOffers(filters: OfferFilters): Promise<OfferQueryResult> {
+export async function getOffers(filters: OfferFilters, scope: OfferScope = "today"): Promise<OfferQueryResult> {
   const config = getConfig();
   const page = Math.max(1, filters.page ?? 1);
   const sort = sortMap[filters.sort ?? "newest"];
@@ -235,6 +264,7 @@ export async function getOffers(filters: OfferFilters): Promise<OfferQueryResult
     return {
       configured: false,
       collectionLabel: "MongoDB not configured",
+      scope,
       offers: [],
       options: { brands: [], models: [], fuelTypes: [], gearboxes: [], bodies: [] },
       stats: {
@@ -254,7 +284,7 @@ export async function getOffers(filters: OfferFilters): Promise<OfferQueryResult
   try {
     const client = await getClient(config.uri);
     const collection = client.db(config.dbName).collection(config.collectionName);
-    const query = buildQuery(filters);
+    const query = buildQuery(filters, scope);
 
     const [offers, total, statsRows, options] = await Promise.all([
       collection
@@ -293,6 +323,7 @@ export async function getOffers(filters: OfferFilters): Promise<OfferQueryResult
     return {
       configured: true,
       collectionLabel: `${config.dbName}.${config.collectionName}`,
+      scope,
       offers: offers.map(serializeOffer),
       options,
       stats: {
@@ -311,6 +342,7 @@ export async function getOffers(filters: OfferFilters): Promise<OfferQueryResult
     return {
       configured: true,
       collectionLabel: `${config.dbName}.${config.collectionName}`,
+      scope,
       offers: [],
       options: { brands: [], models: [], fuelTypes: [], gearboxes: [], bodies: [] },
       stats: {

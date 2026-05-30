@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { parseOfferSearchParams } from "@/lib/offer-search";
 import { getOffers, type OfferFilters, type OfferSort } from "@/lib/offers";
 
 export const dynamic = "force-dynamic";
@@ -15,18 +16,6 @@ const sortOptions: Array<{ value: OfferSort; label: string }> = [
   { value: "mileage_asc", label: "Lowest mileage" },
   { value: "power_desc", label: "Highest power" },
 ];
-
-function first(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function numberParam(value: string | string[] | undefined) {
-  const v = first(value);
-  if (!v) return undefined;
-
-  const parsed = Number(v);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
 
 function formatMoney(value: number | null, currency = "PLN") {
   if (value === null) {
@@ -68,25 +57,14 @@ function hiddenFilters(filters: OfferFilters, page: number) {
 
 export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
-  const sort = first(params.sort) as OfferSort | undefined;
-  const filters: OfferFilters = {
-    q: first(params.q),
-    brand: first(params.brand),
-    model: first(params.model),
-    fuel_type: first(params.fuel_type),
-    gearbox: first(params.gearbox),
-    body: first(params.body),
-    minPrice: numberParam(params.minPrice),
-    maxPrice: numberParam(params.maxPrice),
-    minYear: numberParam(params.minYear),
-    maxYear: numberParam(params.maxYear),
-    sort: sortOptions.some((item) => item.value === sort) ? sort : "newest",
-    page: numberParam(params.page),
-  };
-  const clean = (obj: any) =>
-  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null && v !== ""));
-  const result = await getOffers(clean(filters));
+  const { filters, scope } = parseOfferSearchParams(params);
+  const result = await getOffers(filters, scope);
   const currency = result.offers.find((offer) => offer.currency)?.currency ?? "PLN";
+  const viewLabel = result.scope === "today" ? "Today feed" : "Filtered search";
+  const viewDescription =
+    result.scope === "today"
+      ? "Showing offers first seen today by default."
+      : "Showing offers matching your filters across all dates.";
 
   return (
     <main className="min-h-screen bg-[#f5f3ee] text-[#1e2523]">
@@ -104,6 +82,10 @@ export default async function Home({ searchParams }: PageProps) {
                 Browse scraped offers from MongoDB, narrow the dataset, and compare the
                 fields that matter for pricing and quality checks.
               </p>
+              <div className="mt-4 inline-flex rounded-full border border-[#d8d1c4] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#2f6f62]">
+                {viewLabel}
+              </div>
+              <p className="mt-2 text-sm text-[#65716c]">{viewDescription}</p>
             </div>
             <div className="rounded-md border border-[#d8d1c4] bg-white px-4 py-3 text-sm text-[#46524d]">
               <span className="block text-xs uppercase tracking-[0.14em] text-[#7a837f]">
@@ -114,7 +96,10 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <Stat label="Offers" value={formatNumber(result.stats.total)} />
+            <Stat
+              label={result.scope === "today" ? "Today's offers" : "Matching offers"}
+              value={formatNumber(result.stats.total)}
+            />
             <Stat label="With price" value={formatNumber(result.stats.priced)} />
             <Stat label="Avg price" value={formatMoney(result.stats.averagePrice, currency)} />
             <Stat label="Price range" value={`${formatMoney(result.stats.minPrice, currency)} - ${formatMoney(result.stats.maxPrice, currency)}`} />
@@ -192,7 +177,14 @@ export default async function Home({ searchParams }: PageProps) {
         ) : result.error ? (
           <Notice title="MongoDB query failed" message={result.error} />
         ) : result.offers.length === 0 ? (
-          <Notice title="No offers found" message="Adjust filters or check whether the scraper has inserted documents into this collection." />
+          <Notice
+            title="No offers found"
+            message={
+              result.scope === "today"
+                ? "No offers were first seen today yet. Try again later or use filters to switch into search mode."
+                : "Adjust filters or check whether the scraper has inserted documents into this collection."
+            }
+          />
         ) : (
           <>
             <div className="mt-6 overflow-x-auto border border-[#d8d1c4] bg-white">
@@ -255,7 +247,7 @@ export default async function Home({ searchParams }: PageProps) {
             <div className="mt-5 flex flex-col justify-between gap-3 text-sm text-[#5f6964] sm:flex-row sm:items-center">
               <span>
                 Page {result.page} of {result.totalPages}, showing {result.offers.length} of{" "}
-                {result.stats.total} matching offers
+                {result.stats.total} {result.scope === "today" ? "today's offers" : "matching offers"}
               </span>
               <div className="flex gap-2">
                 {result.page > 1 ? (
