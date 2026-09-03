@@ -182,19 +182,19 @@ export default function Home() {
           <NumberField label="Max year" name="maxYear" value={filters.maxYear} />
 
           <div className="flex items-end gap-2 md:col-span-2 xl:col-span-4">
-            <button
-              type="submit"
-              className="h-10 rounded-md bg-[#244c45] px-5 text-sm font-semibold text-white transition hover:bg-[#1b3934]"
-            >
-              Apply filters
-            </button>
-            <Link
-              href="/"
-              className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] transition hover:border-[#9f9587]"
-            >
-              Reset
-            </Link>
-          </div>
+  <button type="submit" className="h-10 rounded-md bg-[#244c45] px-5 text-sm font-semibold text-white hover:bg-[#1b3934]">
+    Apply filters
+  </button>
+  <Link href="/" className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] hover:border-[#9f9587]">
+    Reset
+  </Link>
+  <Link
+    href={`/map?${searchParams.toString()}`}
+    className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] hover:border-[#9f9587]"
+  >
+    🗺 Map
+  </Link>
+</div>
         </form>
 
         {loading ? (
