@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Offer, OfferFilters, OfferSort } from "@/lib/offers";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 
 const sortOptions: Array<{ value: OfferSort; label: string }> = [
   { value: "newest", label: "Newest scraped" },
@@ -38,7 +39,7 @@ function formatNumber(value: number | null, suffix = "") {
   return `${new Intl.NumberFormat("pl-PL").format(Math.round(value))}${suffix}`;
 }
 
-export default function Home() {
+function HomeContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -335,6 +336,18 @@ export default function Home() {
       </section>
     </main>
   );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center text-sm text-[#65716c]">
+        Loading...
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
+  )
 }
 
 function Input({ label, name, value }: { label: string; name: string; value?: string }) {
