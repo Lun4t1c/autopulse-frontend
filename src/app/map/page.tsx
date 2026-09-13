@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 const OffersMap = dynamic(() => import("@/components/OffersMap"), {
   ssr: false,
@@ -13,13 +14,18 @@ const OffersMap = dynamic(() => import("@/components/OffersMap"), {
   ),
 });
 
-export default function MapPage() {
+function MapContent() {
   const searchParams = useSearchParams();
+  const mapParams = Object.fromEntries([...searchParams.entries()]);
 
-  const mapParams = Object.fromEntries(
-    [...searchParams.entries()].map(([k, v]) => [k, v])
+  return (
+    <section className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-10">
+      <OffersMap searchParams={mapParams} />
+    </section>
   );
+}
 
+export default function MapPage() {
   return (
     <main className="min-h-screen bg-[#f5f3ee]">
       <section className="border-b border-[#d8d1c4] bg-[#fdfbf7]">
@@ -30,18 +36,16 @@ export default function MapPage() {
               Showing locations of active offers matching your filters.
             </p>
           </div>
-          <Link
-            href={`/?${searchParams.toString()}`}
-            className="h-9 rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] flex items-center hover:border-[#9f9587]"
-          >
-            ← Back to list
-          </Link>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-10">
-        <OffersMap searchParams={mapParams} />
-      </section>
+      <Suspense fallback={
+        <div className="flex h-[500px] items-center justify-center text-sm text-[#65716c]">
+          Loading map...
+        </div>
+      }>
+        <MapContent />
+      </Suspense>
     </main>
   );
 }
