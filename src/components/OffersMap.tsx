@@ -90,7 +90,9 @@ export default function OffersMap({ searchParams }: { searchParams: Record<strin
                 {pin.title ?? pin.offer_id}
               </a>
               <div style={{ marginTop: 8, fontSize: 12, color: "#5f6964", lineHeight: 1.8 }}>
-                <img src={pin.img_url} style={{ width: "100%", maxWidth: 200, height: 120, objectFit: "cover", borderRadius: 4 }} />
+                {pin.img_url && (
+                  <img src={pin.img_url} style={{ width: "100%", maxWidth: 200, height: 120, objectFit: "cover", borderRadius: 4 }} />
+                )}
                 <div>💰 {formatPrice(pin.price)}</div>
                 {pin.year && <div>📅 {pin.year}</div>}
                 {pin.mileage && <div>🛣️ {pin.mileage.toLocaleString("pl-PL")} km</div>}

@@ -232,7 +232,18 @@ export default function Home() {
                         }`}
                       >
                         <Td>
-                          <img src={offer.img_url} style={{ width: 130, height: 85, objectFit: "cover", borderRadius: 4 }} />
+                          {offer.img_url ? (
+  <img
+    src={offer.img_url}
+    alt={offer.title ?? ""}
+    style={{ width: 130, height: 85, objectFit: "cover", borderRadius: 4 }}
+    onError={(e) => { e.currentTarget.style.display = "none"; }}
+  />
+) : (
+  <div style={{ width: 130, height: 85, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <span style={{ fontSize: 24 }}>🚗</span>
+  </div>
+)}
                         </Td>
                         <Td>
                           <div className="flex items-start gap-2">
