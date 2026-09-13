@@ -2,6 +2,7 @@ export type Offer = {
   id: string;
   offer_id: string;
   url: string;
+  img_url:string;
   title: string | null;
   brand: string | null;
   model: string | null;

@@ -207,6 +207,7 @@ export default function Home() {
               <table className="min-w-[1180px] w-full border-collapse text-left text-sm">
                 <thead className="bg-[#ebe6dc] text-xs uppercase tracking-[0.1em] text-[#5f6964]">
                   <tr>
+                    <th className="px-4 py-3 font-semibold" style={{ minWidth: 140 }}>Photo</th>
                     <Th>Offer</Th>
                     <Th>Car</Th>
                     <Th>Year</Th>
@@ -230,6 +231,9 @@ export default function Home() {
                           isMatch ? "bg-[#f0faf5]" : ""
                         }`}
                       >
+                        <Td>
+                          <img src={offer.img_url} style={{ width: 130, height: 85, objectFit: "cover", borderRadius: 4 }} />
+                        </Td>
                         <Td>
                           <div className="flex items-start gap-2">
                             {isMatch && (
