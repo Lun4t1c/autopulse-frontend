@@ -63,18 +63,45 @@ function HomeContent() {
     page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
   };
 
+  const watchlistOnly = searchParams.get("watchlist_only") === "true";
+  const toggleWatchlistOnly = () => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (watchlistOnly) {
+      params.delete("watchlist_only");
+      params.delete("page");
+    } else {
+      params.set("watchlist_only", "true");
+      params.set("page", "1");
+    }
+
+    router.push(`/?${params.toString()}`);
+  };
+
   const fetchOffers = useCallback(async () => {
     setLoading(true);
+
     const params = new URLSearchParams();
+
     Object.entries(filters).forEach(([k, v]) => {
-      if (v !== undefined && v !== "") params.set(k, String(v));
+      if (v !== undefined && v !== "") {
+        params.set(k, String(v));
+      }
     });
 
-    const res = await apiFetch(`/offers?${params.toString()}`);
+    if (searchParams.get("watchlist_only") === "true") {
+      params.set("watchlist_only", "true");
+    }
+    const endpoint = watchlistOnly
+      ? "/offers/watchlist"
+      : `/offers?${params.toString()}`;
+    const res = await apiFetch(endpoint);
+
     if (res.ok) {
       const data = await res.json();
       setResult(data);
     }
+
     setLoading(false);
   }, [searchParams]);
 
@@ -183,19 +210,29 @@ function HomeContent() {
           <NumberField label="Max year" name="maxYear" value={filters.maxYear} />
 
           <div className="flex items-end gap-2 md:col-span-2 xl:col-span-4">
-  <button type="submit" className="h-10 rounded-md bg-[#244c45] px-5 text-sm font-semibold text-white hover:bg-[#1b3934]">
-    Apply filters
-  </button>
-  <Link href="/" className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] hover:border-[#9f9587]">
-    Reset
-  </Link>
-  <Link
-    href={`/map?${searchParams.toString()}`}
-    className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] hover:border-[#9f9587]"
-  >
-    🗺 Map
-  </Link>
-</div>
+            <button type="submit" className="h-10 rounded-md bg-[#244c45] px-5 text-sm font-semibold text-white hover:bg-[#1b3934]">
+              Apply filters
+            </button>
+            <Link href="/" className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] hover:border-[#9f9587]">
+              Reset
+            </Link>
+            <Link
+              href={`/map?${searchParams.toString()}`}
+              className="flex h-10 items-center rounded-md border border-[#cfc7b8] bg-white px-4 text-sm font-semibold text-[#34423d] hover:border-[#9f9587]"
+            >
+              🗺 Map
+            </Link>
+            <button
+              type="button"
+              onClick={toggleWatchlistOnly}
+              className={`flex h-10 items-center rounded-md border px-4 text-sm font-semibold ${watchlistOnly
+                ? "border-[#244c45] bg-[#244c45] text-white"
+                : "border-[#cfc7b8] bg-white text-[#34423d] hover:border-[#9f9587]"
+                }`}
+            >
+              ★ Watchlist only
+            </button>
+          </div>
         </form>
 
         {loading ? (
@@ -228,23 +265,22 @@ function HomeContent() {
                     return (
                       <tr
                         key={i}
-                        className={`border-t border-[#e5ded2] align-top ${
-                          isMatch ? "bg-[#f0faf5]" : ""
-                        }`}
+                        className={`border-t border-[#e5ded2] align-top ${isMatch ? "bg-[#f0faf5]" : ""
+                          }`}
                       >
                         <Td>
                           {offer.img_url ? (
-  <img
-    src={offer.img_url}
-    alt={offer.title ?? ""}
-    style={{ width: 130, height: 85, objectFit: "cover", borderRadius: 4 }}
-    onError={(e) => { e.currentTarget.style.display = "none"; }}
-  />
-) : (
-  <div style={{ width: 130, height: 85, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <span style={{ fontSize: 24 }}>🚗</span>
-  </div>
-)}
+                            <img
+                              src={offer.img_url}
+                              alt={offer.title ?? ""}
+                              style={{ width: 130, height: 85, objectFit: "cover", borderRadius: 4 }}
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                          ) : (
+                            <div style={{ width: 130, height: 85, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <span style={{ fontSize: 24 }}>🚗</span>
+                            </div>
+                          )}
                         </Td>
                         <Td>
                           <div className="flex items-start gap-2">
