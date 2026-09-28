@@ -30,10 +30,10 @@ export type OfferFilters = {
   fuel_type?: string;
   gearbox?: string;
   body?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  minYear?: number;
-  maxYear?: number;
+  price_from?: number;
+  price_to?: number;
+  year_from?: number;
+  year_to?: number;
   sort?: OfferSort;
   page?: number;
 };

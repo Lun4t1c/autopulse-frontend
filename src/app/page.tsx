@@ -55,10 +55,10 @@ function HomeContent() {
     fuel_type: searchParams.get("fuel_type") ?? undefined,
     gearbox: searchParams.get("gearbox") ?? undefined,
     body: searchParams.get("body") ?? undefined,
-    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
-    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
-    minYear: searchParams.get("minYear") ? Number(searchParams.get("minYear")) : undefined,
-    maxYear: searchParams.get("maxYear") ? Number(searchParams.get("maxYear")) : undefined,
+    price_from: searchParams.get("price_from") ? Number(searchParams.get("price_from")) : undefined,
+    price_to: searchParams.get("price_to") ? Number(searchParams.get("price_to")) : undefined,
+    year_from: searchParams.get("year_from") ? Number(searchParams.get("year_from")) : undefined,
+    year_to: searchParams.get("year_to") ? Number(searchParams.get("year_to")) : undefined,
     sort: (searchParams.get("sort") as OfferSort) ?? "newest",
     page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
   };
@@ -204,10 +204,10 @@ function HomeContent() {
             </select>
           </label>
 
-          <NumberField label="Min price" name="minPrice" value={filters.minPrice} />
-          <NumberField label="Max price" name="maxPrice" value={filters.maxPrice} />
-          <NumberField label="Min year" name="minYear" value={filters.minYear} />
-          <NumberField label="Max year" name="maxYear" value={filters.maxYear} />
+          <NumberField label="Min price" name="price_from" value={filters.price_from} />
+          <NumberField label="Max price" name="price_to" value={filters.price_to} />
+          <NumberField label="Min year" name="year_from" value={filters.year_from} />
+          <NumberField label="Max year" name="year_to" value={filters.year_to} />
 
           <div className="flex items-end gap-2 md:col-span-2 xl:col-span-4">
             <button type="submit" className="h-10 rounded-md bg-[#244c45] px-5 text-sm font-semibold text-white hover:bg-[#1b3934]">

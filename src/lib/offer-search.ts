@@ -39,10 +39,10 @@ function hasActiveFilter(filters: OfferFilters) {
       filters.fuel_type ||
       filters.gearbox ||
       filters.body ||
-      filters.minPrice != null ||
-      filters.maxPrice != null ||
-      filters.minYear != null ||
-      filters.maxYear != null,
+      filters.price_from != null ||
+      filters.price_to != null ||
+      filters.year_from != null ||
+      filters.year_to != null,
   );
 }
 
@@ -60,10 +60,10 @@ export function parseOfferSearchParams(params: SearchParams): ParsedOfferSearch 
     fuel_type: first(params.fuel_type),
     gearbox: first(params.gearbox),
     body: first(params.body),
-    minPrice: numberParam(params.minPrice),
-    maxPrice: numberParam(params.maxPrice),
-    minYear: numberParam(params.minYear),
-    maxYear: numberParam(params.maxYear),
+    price_from: numberParam(params.minPrice),
+    price_to: numberParam(params.maxPrice),
+    year_from: numberParam(params.minYear),
+    year_to: numberParam(params.maxYear),
     sort: isOfferSort(sort) ? sort : "newest",
     page: numberParam(params.page),
   };
